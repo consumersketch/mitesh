@@ -1,0 +1,141 @@
+{% extends 'base.html.twig' %}
+{% block title %}{{'Invoice Report'}}{% endblock %}
+{% block body %}
+    <div class="container-fluid">
+        <div class="row">
+            <div class="col-sm-12 main">
+                <h2 class="sub-header"> Invoice Report</h2>
+                <hr/>
+                <div class="row">
+                <form id="invoice_search_form" action="" method="post" >
+
+                    <div class="col-sm-3 mb10">  
+                        <div class="form-group">
+                            <label for="client">{{'Choose Client'|trans}}</label>
+                            <select class="js-client-select form-control" >
+                                <option value="">Select Client</option>
+                                {% for client in clients %}
+                                    <option value="{{ client['client_id'] }}">{{ client['client_name'] }}</option>
+                                {% endfor %}
+                            </select> 
+                        </div>     
+                    </div>
+                    <div class="col-sm-3 mb10">  
+                        <div class="form-group">
+                            <label for="client">{{'Choose Product'|trans}}</label>
+                             <select class="js-product-select form-control" >
+                                <option value="">{{'First select client'|trans}}</option>
+                            </select>
+                        </div>     
+                    </div>        
+                   
+                    <div class="col-sm-3 mb10">  
+                        <div class="form-group">
+                            <label for="client">{{'Choose Date'|trans}}</label>
+                            <select class="js-date-select form-control" >
+                                <option value="">{{'Choose Date'|trans}}</option>
+                                <option value="last_month_to_date">Last Month To Date</option>
+                                <option value="this_month">This Month</option>
+                                <option value="this_year">This Year</option>
+                                <option value="last_year">Last Year</option>
+                            </select>
+                        </div>     
+                    </div>          
+                        
+                    <div class="col-sm-3 mb10">  
+                        <input type="submit" style="margin-top: 26px;"class="btn btn-info" value="{{'Generate Report'|trans}}" /> 
+                    </div>    
+                
+
+                    
+                </form>
+                </div>            
+                <div class="table-responsive">      
+                    <table class="table table-striped">
+                        <tr>
+                            <td>{{'Invoice Num'|trans}}</td>
+                            <td>{{'Invoice Date'|trans}}</td>
+                            <td>{{'Product'|trans}}</td>
+                            <td>{{'Quantity'|trans}}</td>
+                            <td>{{'Price'|trans}}</td>
+                            <td>{{'Total'|trans}}</td>
+                        </tr>
+                        <tbody class="js-record-container">
+                            <tr>
+                                <td colspan="6" class="text-center">
+                                    {{'No Records'|trans}}
+                                </td>    
+                            </tr>    
+                        </tbody>
+                    </table>
+                </div>    
+            </div>       
+        </div>       
+    </div>    
+
+{% endblock %}
+{% block javascripts %}
+    {{ parent() }}
+    {% javascripts
+        '@ProductInvoiceBundle/Resources/public/js/jquery.form.js'
+    %}
+    <script type="text/javascript" src="{{ asset_url }}"></script>
+    {% endjavascripts %}
+    <script type="text/javascript">
+        
+           /* fetch result of prodcuts depends on selected client  */
+           $(".js-client-select").change(function () {
+
+                   var clientVal = $(".js-client-select").val();
+                   $.ajax({
+                             type: "POST",
+                             url: Routing.generate('report_product_list_from_client_id'),
+                             data: { client_id: clientVal},
+                             cache: false,
+                             success: function(data) {
+
+                                           var option = '<option value="">Select Product</option>';
+                                                   $.each(data, function( index, value ) {
+                                                           option = option + "<option value='"+value.product_id+"'>"+value.product_description+"</option>";
+                                                   });
+
+                                        $(".js-product-select").html(option);
+                             }
+                           });
+           });
+
+
+            /* Get records as per set filters */
+            $(document).ready(function() { 
+                
+                $('#invoice_search_form').ajaxForm(function() { 
+
+                    var clientVal  = $(".js-client-select").val();
+                    var productVal = $(".js-product-select").val();
+                    var dateVal    = $(".js-date-select").val();
+
+                    $.ajax({
+                              type: "POST",
+                              url: Routing.generate('report_product_list'),
+                              data: { client_id: clientVal, product_id: productVal, date: dateVal},
+                              cache: false,
+                              success: function(data) {
+                                    var table = '';
+                                    $.each(data, function( index, value ) {
+                                            table = table + "<tr>";
+                                            table = table + "<td>"+value.invoice_num+"</td>";
+                                            table = table + "<td>"+value.invoice_date+"</td>";
+                                            table = table + "<td>"+value.product_description+"</td>";
+                                            table = table + "<td>"+value.qty+"</td>";
+                                            table = table + "<td>"+value.price+"</td>";
+                                            table = table + "<td>"+value.total+"</td>";
+                                            table = table + "</tr>";
+                                    });
+                                     $(".js-record-container").html(table);
+                              }
+                            });
+                }); 
+            }); 
+    </script>    
+    
+{% endblock %}

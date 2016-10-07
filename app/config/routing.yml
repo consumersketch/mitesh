@@ -1,0 +1,11 @@
+app:
+    resource: "@AppBundle/Controller/"
+    type:     annotation
+
+product_invoice:
+    resource: "@ProductInvoiceBundle/Controller/"
+    type:     annotation
+    prefix:   /
+
+fos_js_routing:
+    resource: "@FOSJsRoutingBundle/Resources/config/routing/routing.xml"
